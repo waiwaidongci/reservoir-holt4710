@@ -63,6 +63,8 @@ li::marker { color:var(--accent); font-weight:650; }
 .empty a { margin-top:.65rem; }
 .subtle,small,.filename,.pagination { color:var(--muted); }
 .filename { font-family:var(--body); font-size:.89rem; margin-block:.65rem; font-variant-numeric:tabular-nums; }
+.ledger-summary { margin-block:.2rem .9rem; padding:.7rem .85rem; border:1px solid var(--line); background:var(--panel); }
+.ledger-summary .eyeline { margin-bottom:.4rem; }
 .metrics { margin:0; display:grid; gap:0; grid-template-columns:repeat(auto-fit,minmax(min(100%,133px),1fr)); border-block:1px solid var(--line); background:var(--panel); }
 .metrics > div { padding:.85rem; min-width:0; border-inline-start:1px solid var(--line); }
 .metrics > div:first-child { border-inline-start:0; }

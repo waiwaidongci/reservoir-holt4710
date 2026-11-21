@@ -4,7 +4,7 @@ import io
 import json
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from src.domain.demo import demo_rows
+from src.domain.demo import demo_handover_rows, demo_rows
 from src.domain.spec import SPEC
 from src.models.source import Dataset
 
@@ -34,11 +34,20 @@ def save(db, name, filename, rows, actor):
     return dataset, True
 
 
-def template():
+def _csv(rows):
     fields = [field['key'] for field in SPEC['fields']]
     buffer = io.StringIO(newline='')
     writer = csv.DictWriter(buffer, fieldnames=fields, extrasaction='ignore')
     writer.writeheader()
-    # The complete representative dataset also works as a reproducible import fixture.
-    writer.writerows(demo_rows())
+    writer.writerows(rows)
     return '\ufeff' + buffer.getvalue()
+
+
+def template():
+    # The complete representative dataset also works as a reproducible import fixture.
+    return _csv(demo_rows())
+
+
+def handover_template():
+    """Sample with a same-day dual reading on the meter-change day."""
+    return _csv(demo_handover_rows())

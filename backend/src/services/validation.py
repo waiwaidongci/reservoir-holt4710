@@ -60,7 +60,14 @@ def parse_rows(text):
             try:
                 if None in raw or any(value is None for value in raw.values()):
                     raise ValueError('工作表的列数与表头不一致')
-                rows.append({field['key']: cell(field, raw.get(field['key'])) for field in fields})
+                row = {}
+                for field in fields:
+                    value = cell(field, raw.get(field['key']))
+                    # Optional blanks are omitted, not stored as null, so legacy
+                    # single-meter CSVs keep their original fingerprint.
+                    if value is not None:
+                        row[field['key']] = value
+                rows.append(row)
             except ValueError as error:
                 raise ValueError(f'CSV 第 {reader.line_num} 行 · {error}') from None
     except csv.Error:

@@ -11,6 +11,7 @@ from src.models.identity import User
 from src.models.jobs import Run
 from src.models.source import Dataset
 from src.schemas.requests import ReviewRequest, RunRequest
+from src.services import runs_ledger
 from src.services.audit import record
 from src.services.validation import normalize_params
 from src.utils import views
@@ -39,7 +40,9 @@ def create(body: RunRequest, db: Session = Depends(connection),
     item = Run(name=body.name, dataset_id=body.dataset_id, params=normalize_params(body.params), author=actor.username)
     db.add(item)
     db.flush()
-    record(db, actor.username, 'analysis.queued', item.id, dataset_id=item.dataset_id)
+    version = runs_ledger.pin(db, item, body.dataset_id)
+    record(db, actor.username, 'analysis.queued', item.id, dataset_id=item.dataset_id,
+           ledger_version=version.version if version else None)
     db.commit()
     wake()
     return views.run(item, detail=True)
@@ -47,7 +50,17 @@ def create(body: RunRequest, db: Session = Depends(connection),
 
 @router.get('/{run_id}')
 def detail(run_id: int, db: Session = Depends(connection), actor: User = Depends(current)):
-    return views.run(require_job(db, run_id), detail=True)
+    item = require_job(db, run_id)
+    return views.run(item, detail=True)
+
+
+@router.get('/{run_id}/ledger')
+def ledger(run_id: int, db: Session = Depends(connection), actor: User = Depends(current)):
+    item = require_job(db, run_id)
+    _head, version = runs_ledger.of_run(db, item.id)
+    if version is None:
+        raise HTTPException(404, '此运行没有绑定的台账版本')
+    return runs_ledger.version_view(version)
 
 
 @router.get('/{run_id}/export')
